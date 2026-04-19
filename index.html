@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ILPS XAUUSD HFT EA — Strategy Overview</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #040d0f;
+    --surface:   #071418;
+    --border:    #0e2a30;
+    --cyan:      #00e5ff;
+    --cyan-dim:  #006f7a;
+    --green:     #00e676;
+    --green-dim: #00613a;
+    --blue:      #29b6f6;
+    --blue-dim:  #0a4a6e;
+    --red:       #ff5252;
+    --text:      #e0f7fa;
+    --muted:     #4dd0e1;
+    --muted2:    #37474f;
+    --card:      #071c21;
+    --card2:     #0a2228;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ambient glow */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 800px; height: 500px;
+    background: radial-gradient(ellipse, rgba(0,229,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 48px;
+    background: rgba(4,13,15,0.88);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color .2s;
+  }
+
+  .nav-links a:hover { color: var(--cyan); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    border: 1px solid var(--cyan-dim);
+    padding: 6px 18px;
+    border-radius: 2px;
+    margin-bottom: 32px;
+    animation: fadeUp .6s ease both;
+    background: rgba(0,229,255,0.04);
+  }
+
+  .hero h1 {
+    font-size: clamp(40px, 7vw, 84px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    animation: fadeUp .7s ease both;
+  }
+
+  .hero h1 .c { color: var(--cyan); }
+  .hero h1 .g { color: var(--green); }
+
+  .hero-sub {
+    font-size: clamp(14px, 2vw, 17px);
+    color: var(--muted);
+    max-width: 580px;
+    line-height: 1.75;
+    margin-bottom: 60px;
+    animation: fadeUp .8s ease both;
+    font-weight: 400;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 56px;
+    animation: fadeUp .9s ease both;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .stat { text-align: center; }
+
+  .stat-val {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .stat-val.cyan  { color: var(--cyan); }
+  .stat-val.green { color: var(--green); }
+  .stat-val.blue  { color: var(--blue); }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-top: 7px;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    letter-spacing: 0.2em;
+    animation: bounce 2s infinite;
+  }
+
+  @keyframes bounce {
+    0%,100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(6px); }
+  }
+
+  /* SECTIONS */
+  section {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 100px 24px;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-size: clamp(26px, 4vw, 42px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .section-title .c { color: var(--cyan); }
+  .section-title .g { color: var(--green); }
+  .section-title .b { color: var(--blue); }
+
+  .section-desc {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 700px;
+    margin-bottom: 52px;
+    font-weight: 400;
+  }
+
+  /* DIVIDER */
+  hr.divider {
+    position: relative;
+    z-index: 1;
+    border: none;
+    border-top: 1px solid var(--border);
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* CARDS */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 30px;
+    transition: border-color .25s, transform .25s, box-shadow .25s;
+    cursor: default;
+  }
+
+  .card:hover {
+    border-color: var(--cyan-dim);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0,229,255,0.06);
+  }
+
+  .card.green-card:hover { border-color: var(--green-dim); box-shadow: 0 8px 32px rgba(0,230,118,0.06); }
+  .card.blue-card:hover  { border-color: var(--blue-dim);  box-shadow: 0 8px 32px rgba(41,182,246,0.06); }
+
+  .card-icon { font-size: 26px; margin-bottom: 18px; }
+
+  .card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .card h3.cyan  { color: var(--cyan); }
+  .card h3.green { color: var(--green); }
+  .card h3.blue  { color: var(--blue); }
+
+  .card p {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.75;
+    font-weight: 400;
+  }
+
+  /* FLOW STEPS */
+  .flow { display: flex; flex-direction: column; gap: 0; }
+
+  .flow-step {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 28px;
+    position: relative;
+    padding-bottom: 44px;
+    cursor: pointer;
+  }
+
+  .flow-step:last-child { padding-bottom: 0; }
+
+  .flow-step::before {
+    content: '';
+    position: absolute;
+    left: 31px; top: 56px;
+    bottom: 0; width: 2px;
+    background: linear-gradient(to bottom, var(--cyan-dim), transparent);
+  }
+
+  .flow-step:last-child::before { display: none; }
+
+  .step-num {
+    width: 48px; height: 48px;
+    border: 2px solid var(--cyan-dim);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--cyan);
+    flex-shrink: 0;
+    background: var(--card);
+    transition: border-color .2s, background .2s;
+    position: relative; z-index: 1;
+  }
+
+  .flow-step:hover .step-num {
+    border-color: var(--cyan);
+    background: rgba(0,229,255,0.08);
+  }
+
+  .step-num.green-num {
+    border-color: var(--green-dim);
+    color: var(--green);
+  }
+  .flow-step:hover .step-num.green-num {
+    border-color: var(--green);
+    background: rgba(0,230,118,0.08);
+  }
+
+  .step-body { padding-top: 10px; }
+
+  .step-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .step-summary {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 400;
+  }
+
+  .step-detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .4s ease;
+  }
+
+  .step-detail.open { max-height: 600px; }
+
+  .step-detail-inner {
+    margin-top: 16px;
+    padding: 20px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.85;
+    font-weight: 400;
+  }
+
+  .step-detail-inner strong { color: var(--cyan); font-weight: 600; }
+  .step-detail-inner .g    { color: var(--green); font-weight: 600; }
+
+  .hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    letter-spacing: 0.12em;
+    margin-top: 8px;
+  }
+
+  /* PAIR TABLE */
+  .pair-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 48px;
+  }
+
+  .pair-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 22px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .pair-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-primary  { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .dot-caution  { background: #ffa726; box-shadow: 0 0 8px #ffa726; }
+  .dot-no       { background: var(--red); }
+
+  .pair-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .pair-note {
+    font-size: 11px;
+    color: var(--muted2);
+    margin-top: 3px;
+  }
+
+  /* RISK GRID */
+  .risk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .risk-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 26px 24px;
+    transition: border-color .2s;
+  }
+
+  .risk-item:hover { border-color: var(--cyan-dim); }
+
+  .risk-item-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--muted2);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .risk-item-val {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--cyan);
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+
+  .risk-item-val.g { color: var(--green); }
+  .risk-item-val.b { color: var(--blue); }
+
+  .risk-item-desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 400;
+  }
+
+  /* TIMEFRAME TABLE */
+  .tf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 40px;
+  }
+
+  .tf-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--muted2);
+    text-transform: uppercase;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tf-table td {
+    font-size: 13.5px;
+    color: var(--muted);
+    padding: 16px 16px;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.6;
+    vertical-align: top;
+  }
+
+  .tf-table td:first-child {
+    font-family: 'DM Mono', monospace;
+    color: var(--cyan);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .tf-table tr:last-child td { border-bottom: none; }
+  .tf-table tr:hover td { background: rgba(0,229,255,0.02); }
+
+  /* PARAMS TABLE */
+  .params-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 40px;
+  }
+
+  .params-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--muted2);
+    text-transform: uppercase;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .params-table td {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.6;
+    vertical-align: top;
+  }
+
+  .params-table td:first-child {
+    font-family: 'DM Mono', monospace;
+    color: var(--blue);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .params-table td:nth-child(2) {
+    font-family: 'DM Mono', monospace;
+    color: var(--green);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .params-table tr:last-child td { border-bottom: none; }
+  .params-table tr:hover td { background: rgba(41,182,246,0.02); }
+
+  /* PILLAR BADGES */
+  .pillars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+
+  .pillar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: border-color .2s;
+  }
+
+  .pillar:hover { border-color: var(--cyan-dim); }
+
+  .pillar-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--cyan);
+    background: rgba(0,229,255,0.08);
+    border-radius: 2px;
+    padding: 2px 7px;
+    letter-spacing: 0.1em;
+  }
+
+  /* CHART SVG BOX */
+  .chart-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px;
+    margin-top: 48px;
+    overflow-x: auto;
+  }
+
+  .chart-box h3 {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--muted2);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* PHASE TIMELINE */
+  .phase-bar {
+    display: flex;
+    border-radius: 3px;
+    overflow: hidden;
+    height: 44px;
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+  }
+
+  .phase {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .phase-time {
+    font-size: 9px;
+    opacity: 0.6;
+  }
+
+  .ph-asian  { background: rgba(55,71,79,0.6);   color: #78909c; flex: 2.9; }
+  .ph-london { background: rgba(0,229,255,0.12); color: var(--cyan);  flex: 1; border-left: 1px solid var(--cyan-dim); border-right: 1px solid var(--cyan-dim); }
+  .ph-lmid   { background: rgba(41,182,246,0.07); color: var(--blue); flex: 1.2; }
+  .ph-ny     { background: rgba(0,230,118,0.12); color: var(--green); flex: 1.6; border-left: 1px solid var(--green-dim); border-right: 1px solid var(--green-dim); }
+  .ph-close  { background: rgba(55,71,79,0.4);   color: #546e7a; flex: 3.3; }
+
+  /* REVEAL ANIMATIONS */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 48px 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted2);
+    letter-spacing: 0.12em;
+    border-top: 1px solid var(--border);
+  }
+
+  footer span { color: var(--cyan); }
+
+  /* TAG BADGE */
+  .badge {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+    margin-right: 6px;
+    margin-bottom: 4px;
+  }
+
+  .badge-cyan  { background: rgba(0,229,255,0.1);  color: var(--cyan);  border: 1px solid var(--cyan-dim); }
+  .badge-green { background: rgba(0,230,118,0.1);  color: var(--green); border: 1px solid var(--green-dim); }
+  .badge-blue  { background: rgba(41,182,246,0.1); color: var(--blue);  border: 1px solid var(--blue-dim); }
+  .badge-red   { background: rgba(255,82,82,0.1);  color: var(--red);   border: 1px solid rgba(255,82,82,0.3); }
+
+  /* RULE BOX */
+  .rule-box {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    border-radius: 0 4px 4px 0;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .rule-box.green { border-left-color: var(--green); }
+  .rule-box.blue  { border-left-color: var(--blue); }
+  .rule-box.red   { border-left-color: var(--red); }
+
+  .rule-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan);
+    background: rgba(0,229,255,0.08);
+    padding: 3px 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .rule-num.g { color: var(--green); background: rgba(0,230,118,0.08); }
+  .rule-num.b { color: var(--blue);  background: rgba(41,182,246,0.08); }
+  .rule-num.r { color: var(--red);   background: rgba(255,82,82,0.08); }
+
+  .rule-text { font-size: 13.5px; color: var(--muted); line-height: 1.7; font-weight: 400; }
+  .rule-text strong { color: var(--text); font-weight: 600; }
+
+  @media (max-width: 680px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .hero-stats { gap: 28px; }
+    section { padding: 72px 16px; }
+    .phase-bar { height: auto; flex-direction: column; }
+    .phase { padding: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">ILPS · XAUUSD HFT EA</div>
+  <ul class="nav-links">
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#pairs">Pairs & TF</a></li>
+    <li><a href="#entry">Entry Model</a></li>
+    <li><a href="#exit">Exit Logic</a></li>
+    <li><a href="#risk">Risk</a></li>
+    <li><a href="#rules">Rules</a></li>
+    <li><a href="#params">Parameters</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">MetaTrader 5 · Expert Advisor · v1.0.0</div>
+  <h1>Institutional<br/><span class="c">Liquidity</span> <span class="g">Precision</span><br/>System</h1>
+  <p class="hero-sub">
+    A professional-grade HFT Expert Advisor built exclusively for XAUUSD. Engineered on smart money concepts — liquidity sweeps, Fair Value Gaps, and Change of Character — to capture institutional order flow with precision.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-val cyan">60–65%</div>
+      <div class="stat-label">Target Win Rate</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val green">1.8:1</div>
+      <div class="stat-label">Target Avg R:R</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val blue">3–5</div>
+      <div class="stat-label">Trades Per Day</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val cyan">5</div>
+      <div class="stat-label">Confluence Pillars</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val green">&lt;5%</div>
+      <div class="stat-label">Max Monthly DD</div>
+    </div>
+  </div>
+  <div class="scroll-hint">▼ &nbsp; SCROLL TO EXPLORE &nbsp; ▼</div>
+</div>
+
+<hr class="divider"/>
+
+<!-- OVERVIEW -->
+<section id="overview">
+  <div class="reveal">
+    <div class="section-label">00 — Strategy Foundation</div>
+    <h2 class="section-title">What Is <span class="c">ILPS</span>?</h2>
+    <p class="section-desc">
+      ILPS (Institutional Liquidity Precision System) is a confluence-based HFT strategy that targets the most reliable intraday pattern in XAUUSD: the institutional liquidity sweep followed by a structural reversal. It requires a minimum of 4 out of 5 signal pillars to align before any trade is executed — eliminating noise and ensuring only high-probability setups are taken.
+    </p>
+
+    <div class="pillars">
+      <div class="pillar"><span class="pillar-num">P1</span> H1 Break of Structure (BOS)</div>
+      <div class="pillar"><span class="pillar-num">P2</span> M15 Liquidity Pool Identified</div>
+      <div class="pillar"><span class="pillar-num">P3</span> Unmitigated Fair Value Gap</div>
+      <div class="pillar"><span class="pillar-num">P4</span> Liquidity Sweep Confirmed</div>
+      <div class="pillar"><span class="pillar-num">P5</span> M1 Change of Character (CHoCH)</div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🏛️</div>
+        <h3 class="cyan">Institutional Logic</h3>
+        <p>Built entirely around smart money behavior — stop hunts, liquidity engineering, and order block sweeps. No lagging indicators. Every decision is based on real-time price structure and institutional footprints.</p>
+      </div>
+      <div class="card green-card">
+        <div class="card-icon">⚡</div>
+        <h3 class="green">Low Latency Design</h3>
+        <p>All structural calculations (BOS, FVGs, liquidity pools) run at bar close to minimize CPU load. Entry triggers fire on every tick using simple lookup logic — no complex calculations during live tick processing.</p>
+      </div>
+      <div class="card blue-card">
+        <div class="card-icon">🛡️</div>
+        <h3 class="blue">Multi-Layer Risk Control</h3>
+        <p>Session limits, daily loss caps, loss-streak pauses, spread filters, news blackouts, and a recovery mode all work together to protect the account during adverse market conditions.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h3 class="cyan">Tiered Profit Capture</h3>
+        <p>Every trade is split into three sub-positions: 40% closed at 1:1 R:R, 35% at 1:2, and 25% trailing to the opposing liquidity pool. This maximises captured profit while securing early gains.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- MARKET CYCLE -->
+<section id="pairs">
+  <div class="reveal">
+    <div class="section-label">01 — Instrument & Timeframe</div>
+    <h2 class="section-title">Best <span class="g">Pair</span> & <span class="c">Timeframe</span></h2>
+    <p class="section-desc">
+      This EA was designed and calibrated specifically for XAUUSD (Gold). The session logic, ATR thresholds, spread filters, pip values, and SL envelopes are all tuned to Gold's unique market personality. It will not perform correctly on other instruments without a complete rebuild.
+    </p>
+
+    <!-- Session Timeline -->
+    <div class="chart-box" style="margin-top:0; margin-bottom:40px;">
+      <h3>Intraday Market Cycle — GMT</h3>
+      <div class="phase-bar">
+        <div class="phase ph-asian">
+          <span>Asian Session</span>
+          <span class="phase-time">00:00 – 07:00 GMT</span>
+        </div>
+        <div class="phase ph-london">
+          <span>🎯 London Open</span>
+          <span class="phase-time">07:00 – 09:30</span>
+        </div>
+        <div class="phase ph-lmid">
+          <span>London Mid</span>
+          <span class="phase-time">09:30 – 12:00</span>
+        </div>
+        <div class="phase ph-ny">
+          <span>🎯 NY Overlap</span>
+          <span class="phase-time">12:00 – 15:30</span>
+        </div>
+        <div class="phase ph-close">
+          <span>NY Close</span>
+          <span class="phase-time">15:30 – 00:00 GMT</span>
+        </div>
+      </div>
+      <p style="font-size:12px; color:var(--muted2); font-family:'DM Mono',monospace; letter-spacing:0.08em;">
+        🎯 = EA active trading windows &nbsp;|&nbsp; All other sessions: monitoring only, no new entries
+      </p>
+    </div>
+
+    <!-- Timeframe table -->
+    <table class="tf-table">
+      <thead>
+        <tr>
+          <th>Timeframe</th>
+          <th>Role in Strategy</th>
+          <th>What EA Reads</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>H1</td>
+          <td>Structural Bias Layer</td>
+          <td>Break of Structure (BOS) direction — determines whether EA looks for longs or shorts only. Recalculated every H1 bar close.</td>
+        </tr>
+        <tr>
+          <td>M15</td>
+          <td>Liquidity Pool Detection</td>
+          <td>Scans Asian session bars for equal highs (BSL) and equal lows (SSL) within a 3-pip tolerance cluster. Pools are tagged and tracked.</td>
+        </tr>
+        <tr>
+          <td>M5</td>
+          <td>FVG Detection + ATR Filter</td>
+          <td>3-candle Fair Value Gap identification. Also calculates ATR(14) to gate active vs dead market conditions. Updated every M5 bar close.</td>
+        </tr>
+        <tr>
+          <td>M1 ← <span style="color:var(--green)">ATTACH EA HERE</span></td>
+          <td>Entry Trigger & CHoCH Confirmation</td>
+          <td>Sweep detection (wick through pool), Change of Character break, momentum delta filter, and final order execution. Runs on every tick.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pair compatibility -->
+    <h3 style="font-size:17px; font-weight:700; margin-bottom:20px; letter-spacing:-0.01em;">Instrument Compatibility</h3>
+    <div class="pair-grid">
+      <div class="pair-item">
+        <div class="pair-dot dot-primary"></div>
+        <div>
+          <div class="pair-name">XAUUSD</div>
+          <div class="pair-note">✅ Primary — fully optimised</div>
+        </div>
+      </div>
+      <div class="pair-item">
+        <div class="pair-dot dot-caution"></div>
+        <div>
+          <div class="pair-name">XAGUSD</div>
+          <div class="pair-note">⚠️ Partial — wider spreads</div>
+        </div>
+      </div>
+      <div class="pair-item">
+        <div class="pair-dot dot-caution"></div>
+        <div>
+          <div class="pair-name">US30</div>
+          <div class="pair-note">⚠️ Partial — gap logic differs</div>
+        </div>
+      </div>
+      <div class="pair-item">
+        <div class="pair-dot dot-no"></div>
+        <div>
+          <div class="pair-name">EURUSD</div>
+          <div class="pair-note">❌ Poor — too slow, small range</div>
+        </div>
+      </div>
+      <div class="pair-item">
+        <div class="pair-dot dot-no"></div>
+        <div>
+          <div class="pair-name">BTCUSD</div>
+          <div class="pair-note">❌ No — 24/7, breaks session logic</div>
+        </div>
+      </div>
+      <div class="pair-item">
+        <div class="pair-dot dot-no"></div>
+        <div>
+          <div class="pair-name">NAS100</div>
+          <div class="pair-note">❌ No — gap-driven, different behavior</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">📌</div>
+        <h3 class="cyan">Why M1 Chart?</h3>
+        <p>Attach the EA to a 1-minute chart. It pulls H1, M15, and M5 data internally via CopyRates(). The M1 chart gives the EA tick-level precision for sweep detection and CHoCH confirmation — without this you miss the exact entry candle.</p>
+      </div>
+      <div class="card green-card">
+        <div class="card-icon">🌍</div>
+        <h3 class="green">Why London Open?</h3>
+        <p>London Open (07:00–09:30 GMT) is where the Asian session range is swept almost every day. Institutional players engineer stops below Asian lows or above highs, then reverse. This is the most predictable and cleanest pattern in XAUUSD.</p>
+      </div>
+      <div class="card blue-card">
+        <div class="card-icon">🗽</div>
+        <h3 class="blue">Why NY Overlap?</h3>
+        <p>The NY Overlap (12:00–15:30 GMT) is where the true directional move from London accelerates. Continuation trades from this session have the full weight of both London and New York institutional flow behind them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ENTRY MODEL -->
+<section id="entry">
+  <div class="reveal">
+    <div class="section-label">02 — Entry Model</div>
+    <h2 class="section-title">The <span class="c">Entry</span> Decision Engine</h2>
+    <p class="section-desc">
+      Every entry passes through a 14-step sequential gate system. Any failed gate immediately terminates the evaluation for that tick — keeping the EA fast and preventing false entries. The system evaluates pre-session filters on every tick, then detects sweeps and CHoCH at bar close precision.
+    </p>
+
+    <!-- Entry Flow Steps -->
+    <div class="flow">
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num">T1</div>
+        <div class="step-body">
+          <div class="step-title">Session Window Check</div>
+          <div class="step-summary">Only trade during London Open (07:00–09:30) or NY Overlap (12:00–15:30) GMT.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              The EA checks GMT time on every tick. If the current time falls outside both active windows, all further evaluation is skipped immediately. This filter eliminates the Asian session (accumulation — no trades), London mid (reduced), and NY close (noise from institutional book-closing). The session filter uses <strong>GMT time directly</strong> — not broker server time — ensuring DST shifts in March and October do not affect trading windows.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num">T2</div>
+        <div class="step-body">
+          <div class="step-title">News Blackout Filter</div>
+          <div class="step-summary">Block entries 15 minutes before and 30 minutes after any high-impact event.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              High-impact events — FOMC, NFP, CPI, Fed Chair speeches, US GDP, ISM — are pre-loaded into the EA via input fields in <strong>MMDD-HH:MM format</strong>. During the ±15 minute blackout window: no new entries are placed and all pending orders are cancelled. The EA resumes automatically after the blackout period expires. This protects against the explosive, unreadable volatility that occurs during macro events.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num">T3</div>
+        <div class="step-body">
+          <div class="step-title">Spread Filter</div>
+          <div class="step-summary">Spread must be ≤ 25 pips. Crisis spread ≥ 40 pips closes all open positions.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              The live spread (ASK − BID) is checked on every tick. <strong>≤ 25 pips:</strong> trading permitted. <strong>26–39 pips:</strong> entry blocked, existing trades managed only. <strong>≥ 40 pips:</strong> crisis condition — all open positions are closed immediately at market and the EA halts until spread normalises. XAUUSD typically trades at 10–20 pip spread during active sessions; spikes above 25 indicate a thin or pre-news market.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num">T4</div>
+        <div class="step-body">
+          <div class="step-title">Daily Exposure Limits</div>
+          <div class="step-summary">Max 5 trades/day, max 3 in London, max 2 in NY. Daily loss cap: 3% of equity.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              Trade counters are session-specific: London trades (max 3) and NY trades (max 2) are tracked separately, both contributing to a total daily cap of 5. When the <strong>3% daily loss limit</strong> is reached, trading is halted for the remainder of the day with no override. These counters reset at midnight GMT. The session trade limit prevents overtrading in choppy conditions that often follow the initial directional move.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num">T5</div>
+        <div class="step-body">
+          <div class="step-title">Loss Streak Handler</div>
+          <div class="step-summary">Automatic pauses after consecutive losses. 5 losses = 24-hour EA halt.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              <strong>2 losses:</strong> lot size reduced by 25%. <strong>3 losses:</strong> EA pauses for 1 full session (~4 hours). <strong>4 losses:</strong> EA pauses for remainder of day. <strong>5 losses:</strong> EA pauses for 24 hours and sends an alert to the operator. The streak resets after 2 consecutive winning trades. This protects capital during unfavourable market regimes where conditions temporarily break down.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num">T6</div>
+        <div class="step-body">
+          <div class="step-title">Volatility Gate (ATR Filter)</div>
+          <div class="step-summary">M5 ATR(14) must exceed 8 pips. Below 5 pips = dead market, all entries blocked.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              The EA calculates ATR(14) on M5 at every bar close. <strong>ATR &gt; 8 pips:</strong> full trading. <strong>ATR 5–8 pips:</strong> marginal — A+ setups only with reduced lot size. <strong>ATR &lt; 5 pips:</strong> market is dead — all entries blocked. Additionally, if the current ATR is falling below its 5-bar average (contracting volatility), lot size is reduced 50% even if above threshold. A spiking ATR (&gt;2× its 5-bar average) triggers a 2-minute pause to filter news spikes.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num green-num">T7</div>
+        <div class="step-body">
+          <div class="step-title">H1 Directional Bias (BOS)</div>
+          <div class="step-summary">A confirmed H1 Break of Structure must exist. BOS direction = permitted trade direction.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              The EA scans the last 50 H1 bars to identify the most recent swing high and low. A <strong>Bullish BOS</strong> occurs when H1 price closes above the prior swing high — EA will only look for long setups. A <strong>Bearish BOS</strong> occurs when H1 price closes below the prior swing low — shorts only. BOS must be confirmed by a bar body close (not a wick) to prevent false signals from intrabar spikes. If no BOS exists, the EA waits.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num green-num">T8</div>
+        <div class="step-body">
+          <div class="step-title">Liquidity Sweep Detection</div>
+          <div class="step-summary">Price wicks through the identified pool by 2–15 pips. Body closes back inside. Sweep confirmed.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              For a <strong>Long setup:</strong> price must spike below the SSL (Sell-Side Liquidity / equal lows) by 2–15 pips, then close the candle body above the SSL level. For a <strong>Short setup:</strong> price wicks above BSL (Buy-Side Liquidity / equal highs) by 2–15 pips and closes below. A sweep wick &lt;2 pips is too small (noise). A sweep &gt;15 pips indicates a potential true breakout, not a sweep — this setup is rejected. Once confirmed, the sweep wick extreme is recorded as the structural SL reference.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num green-num">T9</div>
+        <div class="step-body">
+          <div class="step-title">Fair Value Gap Alignment</div>
+          <div class="step-summary">An unmitigated FVG must exist within 20 pips of the swept liquidity pool.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              A <strong>Fair Value Gap (FVG)</strong> is identified using a 3-candle pattern on M5: for a bullish FVG, candle 3's low is higher than candle 1's high — a price gap that represents institutional imbalance. For a bearish FVG, candle 3's high is lower than candle 1's low. The EA maintains a dynamic list of up to 20 FVGs, automatically marking them as "mitigated" once price trades back through them. Only unmitigated FVGs within 20 pips of the swept pool qualify — otherwise the setup is rejected.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num green-num">T10</div>
+        <div class="step-body">
+          <div class="step-title">Change of Character (CHoCH)</div>
+          <div class="step-summary">After the sweep, M1 price must break the post-sweep swing high (long) or low (short).</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              CHoCH is the most critical signal — it confirms institutional absorption of the sweep. After an SSL sweep, the EA tracks the highest M1 high formed post-sweep. A <strong>CHoCH Long</strong> is confirmed when M1 price closes above this reference level. After a BSL sweep, CHoCH Short is confirmed when M1 price closes below the post-sweep swing low reference. CHoCH must occur within <strong>5 M1 candles</strong> of the sweep — if it takes longer, the setup is invalidated and the EA resets.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num green-num">T11</div>
+        <div class="step-body">
+          <div class="step-title">Momentum Delta Filter</div>
+          <div class="step-summary">At least 2 of the last 3 M1 candles must close in the trade direction.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              Instead of a lagging RSI or MACD, the EA uses a <strong>body-to-direction check</strong> on the last 3 closed M1 candles. For longs: at least 2 of 3 candles must have Close &gt; Open (bullish body). For shorts: at least 2 of 3 candles must have Close &lt; Open (bearish body). This confirms that momentum has genuinely shifted in the trade direction following CHoCH — not just a single aggressive candle with two wicks.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num green-num">T12</div>
+        <div class="step-body">
+          <div class="step-title">Confluence Count (4 of 5 Pillars)</div>
+          <div class="step-summary">Minimum 4 pillars confirmed for standard entry. All 5 for A+ entry (full 1% risk).</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              The EA scores each of the 5 pillars: BOS (1pt), Liquidity Pool present (1pt), Unmitigated FVG (1pt), Sweep confirmed (1pt), CHoCH confirmed (1pt). <strong>4 pillars = standard entry</strong> at 0.5% base risk. <strong>5 pillars + momentum confirmed + ATR active = A+ setup</strong> at 1.0% risk. If fewer than 4 pillars are active, the EA resets the sweep state and waits for a new setup. This prevents taking low-quality signals.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num green-num">T13</div>
+        <div class="step-body">
+          <div class="step-title">Position Size Calculation</div>
+          <div class="step-summary">SL placed 3 pips beyond sweep wick. Lot size = (Equity × Risk%) ÷ (SL pips × pip value).</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              The structural stop loss is placed <strong>3 pips beyond the extreme wick</strong> of the sweep candle. The SL distance must fall within an 8–20 pip envelope — too tight risks noise stopping the trade out; too wide means the risk calculation would require an unreasonably small lot size. If the structural SL falls outside this envelope, the trade is rejected. Lot size is then calculated precisely from account equity, the chosen risk percentage, and the pip value of the instrument. Recovery mode and loss streaks reduce the risk percentage automatically.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num green-num">T14</div>
+        <div class="step-body">
+          <div class="step-title">Order Execution</div>
+          <div class="step-summary">Three sub-positions opened simultaneously at market for tiered TP management.</div>
+          <div class="step-detail">
+            <div class="step-detail-inner">
+              The total lot size is split into three sub-positions: <strong>TP1 (40% of lots)</strong> at 1:1 R:R, <strong>TP2 (35%)</strong> at 1:2 R:R, <strong>TP3 (25%)</strong> at the nearest opposing liquidity pool or 1:3 R:R (whichever is closer). All three are sent via <strong>OrderSendAsync()</strong> for minimum latency. The trade is tagged with the magic number, logged to journal with full detail (entry, SL, TP levels, pillar count, ATR, session), and the consumed liquidity pool and used FVG are immediately marked to prevent reuse in the same session.
+            </div>
+          </div>
+          <div class="hint">↓ Click to expand</div>
+        </div>
+      </div>
+
+    </div><!-- /flow -->
+
+    <!-- Entry diagram -->
+    <div class="chart-box">
+      <h3>Entry Pattern Diagram — SSL Sweep → CHoCH Long</h3>
+      <svg viewBox="0 0 820 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;">
+
+        <!-- Background grid lines -->
+        <line x1="0"   y1="65"  x2="820" y2="65"  stroke="#0e2a30" stroke-width="1"/>
+        <line x1="0"   y1="105" x2="820" y2="105" stroke="#0e2a30" stroke-width="1"/>
+        <line x1="0"   y1="145" x2="820" y2="145" stroke="#0e2a30" stroke-width="1"/>
+        <line x1="0"   y1="185" x2="820" y2="185" stroke="#0e2a30" stroke-width="1"/>
+        <line x1="0"   y1="225" x2="820" y2="225" stroke="#0e2a30" stroke-width="1"/>
+
+        <!-- Asian range shading -->
+        <rect x="0" y="100" width="280" height="90" fill="rgba(55,71,79,0.15)" rx="2"/>
+        <text x="8" y="98" fill="#546e7a" font-family="DM Mono,monospace" font-size="10">ASIAN RANGE (Accumulation)</text>
+
+        <!-- SSL level line -->
+        <line x1="0" y1="190" x2="820" y2="190" stroke="#00e676" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="4" y="186" fill="#00e676" font-family="DM Mono,monospace" font-size="10">SSL (Equal Lows Pool)</text>
+
+        <!-- Asian consolidation candles -->
+        <rect x="20"  y="120" width="14" height="60" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+        <rect x="42"  y="115" width="14" height="65" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+        <rect x="64"  y="118" width="14" height="62" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+        <rect x="86"  y="122" width="14" height="58" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+        <rect x="108" y="116" width="14" height="64" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+        <rect x="130" y="120" width="14" height="60" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+        <rect x="152" y="117" width="14" height="63" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+        <rect x="174" y="121" width="14" height="59" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+        <rect x="196" y="118" width="14" height="62" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+        <rect x="218" y="120" width="14" height="60" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+        <rect x="240" y="115" width="14" height="65" fill="#0e2a30" stroke="#4dd0e1" stroke-width="1" rx="1"/>
+
+        <!-- London Open label -->
+        <line x1="290" y1="20" x2="290" y2="260" stroke="#00e5ff" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+        <text x="292" y="32" fill="#00e5ff" font-family="DM Mono,monospace" font-size="10">LONDON OPEN</text>
+
+        <!-- Sweep candle - big bearish wick down through SSL -->
+        <line x1="304" y1="85" x2="304" y2="222" stroke="#4dd0e1" stroke-width="1.5"/>
+        <rect x="297" y="85"  width="14" height="75" fill="#ff5252" rx="1"/>
+        <text x="280" y="238" fill="#ff5252" font-family="DM Mono,monospace" font-size="10">↑ SWEEP WICK</text>
+        <circle cx="304" cy="222" r="4" fill="none" stroke="#ff5252" stroke-width="1.5"/>
+
+        <!-- FVG zone (bullish) -->
+        <rect x="320" y="95" width="50" height="30" fill="rgba(0,229,255,0.06)" rx="2"/>
+        <rect x="320" y="95" width="50" height="30" fill="none" stroke="#00e5ff" stroke-width="1.2" stroke-dasharray="4,3" rx="2"/>
+        <text x="322" y="91" fill="#00e5ff" font-family="DM Mono,monospace" font-size="10">FVG</text>
+
+        <!-- Post-sweep candles (small, building) -->
+        <rect x="320" y="155" width="12" height="30" fill="#00e676" opacity=".6" rx="1"/>
+        <rect x="336" y="145" width="12" height="28" fill="#00e676" opacity=".7" rx="1"/>
+
+        <!-- CHoCH line -->
+        <line x1="316" y1="155" x2="700" y2="155" stroke="#29b6f6" stroke-width="1" stroke-dasharray="5,3"/>
+        <text x="352" y="151" fill="#29b6f6" font-family="DM Mono,monospace" font-size="10">CHoCH Break Level</text>
+
+        <!-- CHoCH confirmation candle -->
+        <rect x="352" y="118" width="13" height="37" fill="#00e676" opacity=".9" rx="1"/>
+        <line x1="358" y1="110" x2="358" y2="118" stroke="#00e676" stroke-width="1.5"/>
+        <text x="340" y="108" fill="#00e676" font-family="DM Mono,monospace" font-size="10">CHoCH ✓</text>
+
+        <!-- Entry arrow -->
+        <line x1="372" y1="128" x2="412" y2="128" stroke="#00e676" stroke-width="2"/>
+        <polygon points="410,122 424,128 410,134" fill="#00e676"/>
+        <text x="428" y="133" fill="#00e676" font-family="DM Mono,monospace" font-size="11" font-weight="bold">ENTRY</text>
+
+        <!-- SL line -->
+        <line x1="290" y1="226" x2="780" y2="226" stroke="#ff5252" stroke-width="1" stroke-dasharray="5,3"/>
+        <text x="784" y="230" fill="#ff5252" font-family="DM Mono,monospace" font-size="10">SL</text>
+
+        <!-- TP1 line -->
+        <line x1="424" y1="96" x2="780" y2="96" stroke="#00e676" stroke-width="1" stroke-dasharray="5,3"/>
+        <text x="784" y="100" fill="#00e676" font-family="DM Mono,monospace" font-size="10">TP1</text>
+
+        <!-- TP2 line -->
+        <line x1="424" y1="65" x2="780" y2="65" stroke="#29b6f6" stroke-width="1" stroke-dasharray="5,3"/>
+        <text x="784" y="69" fill="#29b6f6" font-family="DM Mono,monospace" font-size="10">TP2</text>
+
+        <!-- TP3 line -->
+        <line x1="424" y1="36" x2="780" y2="36" stroke="#00e5ff" stroke-width="1" stroke-dasharray="5,3"/>
+        <text x="784" y="40" fill="#00e5ff" font-family="DM Mono,monospace" font-size="10">TP3</text>
+
+        <!-- 40% close marker -->
+        <circle cx="570" cy="96" r="5" fill="#00e676"/>
+        <text x="534" y="91" fill="#00e676" font-family="DM Mono,monospace" font-size="10">40% close</text>
+
+        <!-- 35% close marker -->
+        <circle cx="640" cy="65" r="5" fill="#29b6f6"/>
+        <text x="604" y="60" fill="#29b6f6" font-family="DM Mono,monospace" font-size="10">35% close</text>
+
+        <!-- Bullish run candles -->
+        <rect x="424" y="108" width="13" height="22" fill="#00e676" opacity=".8" rx="1"/>
+        <rect x="441" y="96"  width="13" height="24" fill="#00e676" opacity=".8" rx="1"/>
+        <rect x="458" y="84"  width="13" height="22" fill="#00e676" opacity=".85" rx="1"/>
+        <rect x="475" y="74"  width="13" height="22" fill="#00e676" opacity=".85" rx="1"/>
+        <rect x="492" y="64"  width="13" height="22" fill="#00e676" opacity=".9" rx="1"/>
+        <rect x="509" y="55"  width="13" height="22" fill="#00e676" opacity=".9" rx="1"/>
+        <rect x="526" y="46"  width="13" height="22" fill="#00e676" opacity=".95" rx="1"/>
+        <rect x="560" y="38"  width="13" height="22" fill="#00e676" opacity=".95" rx="1"/>
+        <rect x="577" y="30"  width="13" height="22" fill="#00e676" opacity="1" rx="1"/>
+
+        <!-- Breakeven move arrow -->
+        <text x="430" y="248" fill="#4dd0e1" font-family="DM Mono,monospace" font-size="10">① Sweep SSL</text>
+        <text x="530" y="248" fill="#29b6f6" font-family="DM Mono,monospace" font-size="10">② CHoCH</text>
+        <text x="610" y="248" fill="#00e676" font-family="DM Mono,monospace" font-size="10">③ Entry + Run to TP3</text>
+      </svg>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- EXIT LOGIC -->
+<section id="exit">
+  <div class="reveal">
+    <div class="section-label">03 — Exit System</div>
+    <h2 class="section-title">Exit <span class="b">Logic</span> & Trade Management</h2>
+    <p class="section-desc">
+      Exits are structured in three tiers — locking profit early while letting a portion of the position run to maximum potential. Every exit rule is automated with no manual intervention required.
+    </p>
+
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-icon">✂️</div>
+        <h3 class="cyan">Stop Loss — Structural Placement</h3>
+        <p>SL is placed 3 pips beyond the extreme wick of the sweep candle. For longs: 3 pips below the sweep low. For shorts: 3 pips above the sweep high. SL must fall within an 8–20 pip envelope — trades outside this range are rejected before entry.</p>
+      </div>
+
+      <div class="card green-card">
+        <div class="card-icon">💰</div>
+        <h3 class="green">TP1 — 1:1 R:R (40% of position)</h3>
+        <p>The first 40% of the position is closed at exactly 1:1 risk-reward. The moment TP1 is hit, the stop loss on all remaining sub-positions is moved to entry price + 1 pip (breakeven). From this point forward, the trade cannot result in a loss.</p>
+      </div>
+
+      <div class="card blue-card">
+        <div class="card-icon">📈</div>
+        <h3 class="blue">TP2 — 1:2 R:R (35% of position)</h3>
+        <p>The second 35% closes at a 1:2 risk-reward target. Once TP2 is hit, the trailing stop activates on the remaining 25% runner position. The TP2 target is also aligned with the nearest unmitigated FVG midpoint when possible.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h3 class="cyan">TP3 — Liquidity Target (25% runner)</h3>
+        <p>The final 25% targets the opposing liquidity pool (BSL for longs, SSL for shorts) identified on M15 — or 1:3 R:R if the pool is further. A 10-pip trailing stop manages this runner, locking profit as price extends toward the target.</p>
+      </div>
+
+      <div class="card green-card">
+        <div class="card-icon">⏱️</div>
+        <h3 class="green">Time Exit — 45 Minutes</h3>
+        <p>If a trade has been open for more than 45 minutes without hitting TP1, it is closed at market. Slow-moving trades indicate weak momentum — the setup premise may have weakened or the market has shifted to ranging conditions.</p>
+      </div>
+
+      <div class="card blue-card">
+        <div class="card-icon">⚠️</div>
+        <h3 class="blue">Invalidation Exits</h3>
+        <p>Immediate market close if: a counter-BOS forms on M5, spread exceeds 40 pips, price re-enters the swept liquidity pool body, or an unscheduled high-impact news event begins. These exits take priority over all TP levels.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- RISK MANAGEMENT -->
+<section id="risk">
+  <div class="reveal">
+    <div class="section-label">04 — Risk Management</div>
+    <h2 class="section-title">Capital <span class="g">Protection</span> System</h2>
+    <p class="section-desc">
+      Risk is managed at five levels simultaneously: per-trade sizing, session limits, daily loss caps, weekly drawdown monitoring, and a recovery mode that activates automatically during extended drawdowns.
+    </p>
+
+    <div class="risk-grid">
+      <div class="risk-item">
+        <div class="risk-item-label">Base Risk Per Trade</div>
+        <div class="risk-item-val">0.5%</div>
+        <div class="risk-item-desc">Standard setup risk. Lot size auto-calculated each trade from current equity. Never a fixed lot.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">A+ Setup Risk</div>
+        <div class="risk-item-val g">1.0%</div>
+        <div class="risk-item-desc">All 5 pillars + momentum + active ATR. Only then does risk scale to maximum 1% per trade.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Daily Loss Cap</div>
+        <div class="risk-item-val">3%</div>
+        <div class="risk-item-desc">Trading halts for the remainder of the day automatically. Resets at midnight GMT with no manual override needed.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Weekly Loss Cap</div>
+        <div class="risk-item-val g">6%</div>
+        <div class="risk-item-desc">If weekly losses exceed 6%, the next week's base risk is automatically reduced to 0.25% until equity recovers.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Recovery Drawdown</div>
+        <div class="risk-item-val b">10%</div>
+        <div class="risk-item-desc">At 10% peak-to-trough drawdown: recovery mode activates. Max 2 trades/day, A+ only, 0.25% risk until equity recovers to -5% of peak.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Max Concurrent Trades</div>
+        <div class="risk-item-val">1</div>
+        <div class="risk-item-desc">One trade open at a time per symbol. No pyramiding, no grid, no martingale. Each trade stands alone.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Max Daily Trades</div>
+        <div class="risk-item-val g">5</div>
+        <div class="risk-item-desc">3 in London session + 2 in NY Overlap. Prevents overtrading in low-quality conditions after the initial move.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Breakeven Trigger</div>
+        <div class="risk-item-val b">1:1 R:R</div>
+        <div class="risk-item-desc">SL moves to entry +1 pip the moment TP1 is hit. Remaining position is completely risk-free from that point.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Blended R:R</div>
+        <div class="risk-item-val">~1.8:1</div>
+        <div class="risk-item-desc">40% at 1R + 35% at 2R + 25% trailing (avg 2.5R+) = approximately 1.8R blended on full winners.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- RULE SYSTEM -->
+<section id="rules">
+  <div class="reveal">
+    <div class="section-label">05 — Algorithmic Rule Set</div>
+    <h2 class="section-title">Complete <span class="c">Rule</span> Summary</h2>
+    <p class="section-desc">
+      The EA evaluates every rule sequentially on every tick. The first FAIL terminates evaluation for that tick. This ensures deterministic, unambiguous decisions with minimal processing overhead.
+    </p>
+
+    <h3 style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.18em;color:var(--muted2);text-transform:uppercase;margin-bottom:16px;">Pre-Session Initialization (once per session)</h3>
+
+    <div class="rule-box"><div class="rule-num">I-1</div><div class="rule-text"><strong>Load news calendar.</strong> Parse all high-impact events. Tag ±15 minute blackout windows around each event.</div></div>
+    <div class="rule-box"><div class="rule-num">I-2</div><div class="rule-text"><strong>Scan H1 BOS.</strong> Look back 50 bars. Record BOS_DIRECTION = BULL or BEAR. Requires body close confirmation, not just wick.</div></div>
+    <div class="rule-box"><div class="rule-num">I-3</div><div class="rule-text"><strong>Scan M15 liquidity pools.</strong> Asian session bars only. Find equal highs (BSL) and equal lows (SSL) within 3-pip tolerance. Store all pools.</div></div>
+    <div class="rule-box"><div class="rule-num">I-4</div><div class="rule-text"><strong>Scan M5 FVGs.</strong> Last 100 bars. Store up to 20 unmitigated Fair Value Gaps with high, low, and midpoint coordinates.</div></div>
+    <div class="rule-box"><div class="rule-num">I-5</div><div class="rule-text"><strong>Calculate M5 ATR(14).</strong> Store as SESSION_ATR and compute 5-bar average for dynamic comparison.</div></div>
+    <div class="rule-box"><div class="rule-num">I-6</div><div class="rule-text"><strong>Reset counters.</strong> DAILY_LOSS_USED = 0, TRADES_TODAY = 0. Carry forward CONSECUTIVE_LOSSES from prior session.</div></div>
+
+    <h3 style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.18em;color:var(--muted2);text-transform:uppercase;margin-bottom:16px;margin-top:36px;">Live Tick Evaluation (every tick)</h3>
+
+    <div class="rule-box green"><div class="rule-num g">T-1</div><div class="rule-text"><strong>Session check.</strong> Current GMT time must be within 07:00–09:30 OR 12:00–15:30. FAIL = skip all remaining rules.</div></div>
+    <div class="rule-box green"><div class="rule-num g">T-2</div><div class="rule-text"><strong>News blackout.</strong> No high-impact event within ±15 minutes. FAIL = skip.</div></div>
+    <div class="rule-box green"><div class="rule-num g">T-3</div><div class="rule-text"><strong>Spread check.</strong> Current spread ≤ 25 pips. FAIL = skip. If ≥ 40 pips = close all positions + halt.</div></div>
+    <div class="rule-box green"><div class="rule-num g">T-4</div><div class="rule-text"><strong>Daily limits.</strong> TRADES_TODAY &lt; 5 AND DAILY_LOSS_USED &lt; 3% equity. FAIL = halt for day.</div></div>
+    <div class="rule-box green"><div class="rule-num g">T-5</div><div class="rule-text"><strong>Loss streak.</strong> CONSECUTIVE_LOSSES checked against thresholds. 3 losses = pause session. 5 losses = pause 24 hours.</div></div>
+    <div class="rule-box green"><div class="rule-num g">T-6</div><div class="rule-text"><strong>ATR gate.</strong> M5 ATR(14) &gt; 8 pips = full trade. 5–8 pips = A+ only. &lt; 5 pips = FAIL, all entries blocked.</div></div>
+    <div class="rule-box"><div class="rule-num">T-7</div><div class="rule-text"><strong>BOS direction.</strong> BOS_DIRECTION must be BULL (for long) or BEAR (for short). NONE = FAIL.</div></div>
+    <div class="rule-box"><div class="rule-num">T-8</div><div class="rule-text"><strong>Sweep detection.</strong> Wick through pool by 2–15 pips, body closes back inside. Record SWEEP_CONFIRMED + wick extreme.</div></div>
+    <div class="rule-box"><div class="rule-num">T-9</div><div class="rule-text"><strong>FVG alignment.</strong> Unmitigated FVG must exist within 20 pips of swept pool. FAIL = reject setup.</div></div>
+    <div class="rule-box"><div class="rule-num">T-10</div><div class="rule-text"><strong>CHoCH check.</strong> Post-sweep M1 must break swing reference in trade direction. Must occur within 5 M1 candles. Else invalidate.</div></div>
+    <div class="rule-box"><div class="rule-num">T-11</div><div class="rule-text"><strong>Momentum delta.</strong> 2 of last 3 M1 candles must close in trade direction (body, not wick). FAIL = reject.</div></div>
+    <div class="rule-box"><div class="rule-num">T-12</div><div class="rule-text"><strong>Confluence count.</strong> Minimum 4 of 5 pillars confirmed. All 5 = A+ entry at 1% risk. Under 4 = FAIL.</div></div>
+    <div class="rule-box"><div class="rule-num">T-13</div><div class="rule-text"><strong>SL envelope.</strong> Structural SL must be 8–20 pips from entry. Calculate lot size from equity × risk% ÷ (SL pips × pip value).</div></div>
+    <div class="rule-box"><div class="rule-num">T-14</div><div class="rule-text"><strong>Execute.</strong> Send 3 sub-positions via OrderSendAsync(). Mark pool consumed. Mark FVG mitigated. Reset sweep state.</div></div>
+
+    <h3 style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.18em;color:var(--muted2);text-transform:uppercase;margin-bottom:16px;margin-top:36px;">Trade Management (every tick while in trade)</h3>
+
+    <div class="rule-box blue"><div class="rule-num b">M-1</div><div class="rule-text"><strong>TP1 hit.</strong> Move SL to entry + 1 pip. Close 40% of position. Trade is now risk-free.</div></div>
+    <div class="rule-box blue"><div class="rule-num b">M-2</div><div class="rule-text"><strong>TP2 hit.</strong> Close 35% of position. Activate 10-pip trailing stop on remaining 25% runner.</div></div>
+    <div class="rule-box blue"><div class="rule-num b">M-3</div><div class="rule-text"><strong>Time exit.</strong> If trade open &gt; 45 minutes without TP1 hit, close entire position at market.</div></div>
+    <div class="rule-box red"><div class="rule-num r">M-4</div><div class="rule-text"><strong>Invalidation exit (immediate).</strong> Counter-BOS on M5 | Spread ≥ 40 pips | Price re-enters swept pool | Unscheduled news event.</div></div>
+    <div class="rule-box blue"><div class="rule-num b">M-5</div><div class="rule-text"><strong>Post-trade logging.</strong> Record WIN/LOSS/BE. Update streak counter. Un-tag consumed FVG and liquidity pool.</div></div>
+
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- PARAMETERS -->
+<section id="params">
+  <div class="reveal">
+    <div class="section-label">06 — Configuration</div>
+    <h2 class="section-title">Input <span class="b">Parameters</span></h2>
+    <p class="section-desc">
+      All parameters are accessible from the EA inputs panel in MT5 when attaching to the chart. No code changes are required for normal configuration.
+    </p>
+
+    <table class="params-table">
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>LondonOpenHour</td><td>7</td><td>London session start hour in GMT (default 07:00). Adjust for DST if needed.</td></tr>
+        <tr><td>LondonCloseHour/Min</td><td>9 / 30</td><td>London session end time GMT. No new entries after this time until NY opens.</td></tr>
+        <tr><td>NYOpenHour</td><td>12</td><td>New York overlap start hour GMT. Second primary trading window begins here.</td></tr>
+        <tr><td>NYCloseHour/Min</td><td>15 / 30</td><td>NY overlap end. All positions closed at 16:00 GMT regardless of status.</td></tr>
+        <tr><td>BaseRiskPercent</td><td>0.5</td><td>Risk per trade for standard setups (4 pillars). Lot size auto-calculated every trade.</td></tr>
+        <tr><td>APlusRiskPercent</td><td>1.0</td><td>Risk per trade for A+ setups only (all 5 pillars + momentum + active ATR). Maximum allowed.</td></tr>
+        <tr><td>MaxDailyLossPct</td><td>3.0</td><td>EA halts for remainder of day when cumulative daily loss reaches this percentage of balance.</td></tr>
+        <tr><td>MaxWeeklyLossPct</td><td>6.0</td><td>When hit, next week's base risk drops to 0.25% until equity recovers above threshold.</td></tr>
+        <tr><td>RecoveryDrawdownPct</td><td>10.0</td><td>Peak-to-trough drawdown % that triggers recovery mode. EA becomes highly selective.</td></tr>
+        <tr><td>MaxTradesPerDay</td><td>5</td><td>Absolute maximum trades across both sessions combined. Includes all outcomes.</td></tr>
+        <tr><td>MaxSpreadPips</td><td>25.0</td><td>Maximum spread in pips before entry is blocked. XAUUSD is typically 10–20 during active hours.</td></tr>
+        <tr><td>CrisisSpreadPips</td><td>40.0</td><td>If spread reaches this level, all open positions are closed immediately and EA pauses.</td></tr>
+        <tr><td>MinSLPips</td><td>8.0</td><td>Minimum stop loss distance in pips. Trades with tighter structural SL are rejected.</td></tr>
+        <tr><td>MaxSLPips</td><td>20.0</td><td>Maximum stop loss distance in pips. Prevents oversized stops from requiring micro lot sizes.</td></tr>
+        <tr><td>SweepMinPips</td><td>2.0</td><td>Minimum wick extension beyond liquidity pool to confirm a valid sweep (not noise).</td></tr>
+        <tr><td>SweepMaxPips</td><td>15.0</td><td>Maximum sweep extension. Beyond this suggests a true breakout rather than a stop hunt.</td></tr>
+        <tr><td>MinATRPips</td><td>8.0</td><td>M5 ATR(14) minimum for full trading. Below this = marginal or dead market conditions.</td></tr>
+        <tr><td>ATRPeriod</td><td>14</td><td>ATR calculation period on M5 timeframe. Standard 14-period is recommended.</td></tr>
+        <tr><td>CHoCHTimeout</td><td>5</td><td>Maximum M1 candles after a sweep before CHoCH must occur. Stale sweeps are invalidated.</td></tr>
+        <tr><td>MaxTradeMinutes</td><td>45</td><td>If trade is open longer than this without hitting TP1, it is closed at market (time exit).</td></tr>
+        <tr><td>TP1_RR / TP2_RR / TP3_RR</td><td>1.0 / 2.0 / 3.0</td><td>Risk-reward ratios for each of the three take profit levels. TP3 also uses opposing liquidity pool.</td></tr>
+        <tr><td>TP1_ClosePct / TP2_ClosePct</td><td>40% / 35%</td><td>Percentage of total position closed at TP1 and TP2. Remaining 25% runs as trailing runner to TP3.</td></tr>
+        <tr><td>TrailStopPips</td><td>10.0</td><td>Trailing stop distance for the TP3 runner position after TP2 is hit.</td></tr>
+        <tr><td>NewsEvent1–5</td><td>""</td><td>High-impact news events in MMDD-HH:MM format (e.g. 0131-14:30 = Jan 31 at 14:30 GMT).</td></tr>
+        <tr><td>ShowDashboard</td><td>true</td><td>Toggle the live status dashboard on the chart. Disable when running headless on VPS.</td></tr>
+        <tr><td>EnableAlerts</td><td>true</td><td>MT5 alerts on sweep detection, CHoCH confirmation, and trade execution events.</td></tr>
+        <tr><td>VerboseLogging</td><td>false</td><td>Log detailed bar-close recalculation data to the MT5 journal. Enable for debugging only.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">🖥️</div>
+        <h3 class="cyan">VPS Setup</h3>
+        <p>Deploy on a VPS co-located at NY4 or LD4 Equinix (whichever is closer to your broker's server). Target ping &lt;5ms. Minimum 2GB RAM. Always keep MT5 on the latest stable build. Disable ShowDashboard for headless VPS operation.</p>
+      </div>
+      <div class="card green-card">
+        <div class="card-icon">🔬</div>
+        <h3 class="green">Backtesting Setup</h3>
+        <p>Use MT5 Strategy Tester with "Every tick based on real ticks" mode. Ensure at least 3 months of M1 XAUUSD data is downloaded before testing. Forward test on demo for minimum 4 weeks before going live.</p>
+      </div>
+      <div class="card blue-card">
+        <div class="card-icon">📋</div>
+        <h3 class="blue">Live Checklist</h3>
+        <p>✓ Attach to M1 XAUUSD chart &nbsp;✓ Algo Trading button green &nbsp;✓ Allow Live Trading checked &nbsp;✓ GMT time verified &nbsp;✓ Spread confirmed &lt;25 pips at London Open &nbsp;✓ News events entered for the week</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- DISCLAIMER -->
+<section style="padding: 60px 24px;">
+  <div class="reveal" style="background:var(--card);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:0 4px 4px 0;padding:32px;max-width:820px;margin:0 auto;">
+    <div class="section-label" style="margin-bottom:12px; color: var(--red);">⚠️ Important Disclaimer</div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.9;font-weight:400;">
+      The ILPS Expert Advisor is provided for educational and research purposes only. All automated trading carries significant financial risk. Past performance in backtesting or simulation does not guarantee future live trading results. Markets can and do behave in ways that no algorithm can fully predict or protect against. Always test thoroughly on a <strong style="color:var(--text)">demo account for a minimum of 4–8 weeks</strong> before deploying on any live account. XAUUSD and CFD trading involves leverage which can result in losses exceeding your initial deposit. Only ever trade with capital you can genuinely afford to lose. The creator assumes no liability for any financial losses incurred through the use of this software.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <span>ILPS</span> &nbsp;·&nbsp; Institutional Liquidity Precision System &nbsp;·&nbsp; MetaTrader 5 &nbsp;·&nbsp; v1.0.0
+  <br/><br/>
+  Built on Smart Money Concepts · Liquidity Engineering · ICT Methodology
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  reveals.forEach(r => observer.observe(r));
+
+  // Step toggle
+  function toggleStep(el) {
+    const detail = el.querySelector('.step-detail');
+    const hint   = el.querySelector('.hint');
+    if(!detail) return;
+    detail.classList.toggle('open');
+    if(hint) hint.textContent = detail.classList.contains('open') ? '↑ Click to collapse' : '↓ Click to expand';
+  }
+
+  // Active nav highlight on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if(window.scrollY >= s.offsetTop - 140) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.style.color = a.getAttribute('href') === '#' + current ? 'var(--cyan)' : '';
+    });
+  });
+</script>
+</body>
+</html>
