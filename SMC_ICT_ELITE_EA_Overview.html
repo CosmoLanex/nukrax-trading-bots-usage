@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SMC ICT Elite EA — Strategy Overview</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #080c10;
+    --surface:  #0d1520;
+    --border:   #1a2535;
+    --gold:     #c9a84c;
+    --gold-dim: #8a6f30;
+    --green:    #22c55e;
+    --red:      #ef4444;
+    --blue:     #3b82f6;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --card:     #111827;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Grid background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 48px;
+    background: rgba(8,12,16,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color .2s;
+  }
+
+  .nav-links a:hover { color: var(--gold); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    border: 1px solid var(--gold-dim);
+    padding: 6px 16px;
+    border-radius: 2px;
+    margin-bottom: 32px;
+    animation: fadeUp .6s ease both;
+  }
+
+  .hero h1 {
+    font-size: clamp(42px, 7vw, 88px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    animation: fadeUp .7s ease both;
+  }
+
+  .hero h1 span { color: var(--gold); }
+
+  .hero-sub {
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 56px;
+    animation: fadeUp .8s ease both;
+    font-weight: 400;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    animation: fadeUp .9s ease both;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-val {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* ── SECTIONS ── */
+  section {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 100px 24px;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 48px;
+  }
+
+  .section-title span { color: var(--gold); }
+
+  /* ── CARDS ── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px;
+    transition: border-color .25s, transform .25s;
+    cursor: default;
+  }
+
+  .card:hover {
+    border-color: var(--gold-dim);
+    transform: translateY(-3px);
+  }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
+  .card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .card p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 400;
+  }
+
+  /* ── FLOW STEPS ── */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .flow-step {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 32px;
+    position: relative;
+    padding-bottom: 48px;
+    cursor: pointer;
+  }
+
+  .flow-step:last-child { padding-bottom: 0; }
+
+  .flow-step::before {
+    content: '';
+    position: absolute;
+    left: 31px;
+    top: 56px;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--gold-dim), transparent);
+  }
+
+  .flow-step:last-child::before { display: none; }
+
+  .step-num {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid var(--gold-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--gold);
+    flex-shrink: 0;
+    background: var(--card);
+    transition: background .25s, border-color .25s;
+  }
+
+  .flow-step:hover .step-num {
+    background: var(--gold);
+    color: var(--bg);
+    border-color: var(--gold);
+  }
+
+  .step-content {
+    padding-top: 14px;
+  }
+
+  .step-content h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .step-content p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.75;
+    font-weight: 400;
+  }
+
+  .step-detail {
+    display: none;
+    margin-top: 16px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.75;
+    font-family: 'DM Mono', monospace;
+    font-weight: 400;
+  }
+
+  .step-detail.open { display: block; animation: slideDown .25s ease; }
+
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin: 2px;
+    letter-spacing: 0.06em;
+  }
+
+  .tag-green  { background: rgba(34,197,94,.15);  color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+  .tag-red    { background: rgba(239,68,68,.15);   color: var(--red);   border: 1px solid rgba(239,68,68,.3); }
+  .tag-gold   { background: rgba(201,168,76,.15);  color: var(--gold);  border: 1px solid rgba(201,168,76,.3); }
+  .tag-blue   { background: rgba(59,130,246,.15);  color: var(--blue);  border: 1px solid rgba(59,130,246,.3); }
+
+  /* ── RISK TABLE ── */
+  .risk-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .risk-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 24px;
+  }
+
+  .risk-item-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .risk-item-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--gold);
+  }
+
+  .risk-item-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  /* ── CHART VISUAL ── */
+  .chart-demo {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px;
+    margin-top: 48px;
+  }
+
+  .chart-demo h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  svg.chart { width: 100%; height: 260px; display: block; }
+
+  /* ── PARAMS TABLE ── */
+  .params-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .params-table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  .params-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(26,37,53,0.5);
+    font-weight: 400;
+    vertical-align: top;
+  }
+
+  .params-table tr:hover td { background: rgba(201,168,76,.04); }
+
+  .params-table td:first-child {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .params-table td:nth-child(2) {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--blue);
+  }
+
+  .params-table td:nth-child(3) {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 48px 24px;
+    border-top: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── TOGGLE BUTTON ── */
+  .hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--gold-dim);
+    letter-spacing: 0.08em;
+    margin-top: 8px;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media(max-width: 640px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .hero-stats { gap: 24px; flex-wrap: wrap; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">SMC ICT Elite EA</div>
+  <ul class="nav-links">
+    <li><a href="#philosophy">Philosophy</a></li>
+    <li><a href="#entry">Entry Logic</a></li>
+    <li><a href="#exit">Exit Logic</a></li>
+    <li><a href="#risk">Risk</a></li>
+    <li><a href="#params">Parameters</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">MetaTrader 5 — MQL5 Expert Advisor</div>
+  <h1>SMC ICT<br/><span>Elite EA</span></h1>
+  <p class="hero-sub">
+    An institutional-grade automated trading system built on Smart Money Concepts and ICT methodology —
+    engineered to identify high-probability setups where banks and institutions leave their footprints.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-val">4</div>
+      <div class="stat-label">Confluence Filters</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">1:2</div>
+      <div class="stat-label">Default R:R</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">50%</div>
+      <div class="stat-label">Partial TP at 1R</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">Live</div>
+      <div class="stat-label">Trailing Stop</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider"/>
+
+<!-- PHILOSOPHY -->
+<section id="philosophy">
+  <div class="reveal">
+    <div class="section-label">01 — Foundation</div>
+    <h2 class="section-title">The <span>Philosophy</span></h2>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-icon">🏦</div>
+        <h3>Institutional Order Flow</h3>
+        <p>Retail traders lose because they chase price. This EA does the opposite — it waits for institutions to reveal their hand through Break of Structure, then follows their direction with precision entries.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h3>Confluence Over Frequency</h3>
+        <p>The EA requires four independent conditions to align before entering any trade. Fewer, higher-quality signals beat a high volume of mediocre ones — every time.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <h3>Capital Preservation First</h3>
+        <p>Every trade risks exactly 1% of account balance. The partial close at 1R removes half the position and moves stop to breakeven — the trade becomes risk-free before the final target.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">📐</div>
+        <h3>Multi-Timeframe Alignment</h3>
+        <p>Bias is set on the higher timeframe (H1). Entries are only executed on the lower timeframe (M5) when that bias is confirmed. This eliminates counter-trend noise.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ENTRY LOGIC -->
+<section id="entry">
+  <div class="reveal">
+    <div class="section-label">02 — Entry System</div>
+    <h2 class="section-title">Entry <span>Logic</span></h2>
+    <p style="color:var(--muted);font-size:14px;line-height:1.8;max-width:620px;margin-bottom:48px;font-weight:400;">
+      All four conditions must be true simultaneously. If any one fails, no trade is taken.
+      Click each step to expand the detail.
+    </p>
+
+    <div class="flow">
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>HTF Break of Structure (BOS)</h3>
+          <p>The H1 chart must confirm institutional directional bias before anything else is evaluated.</p>
+          <p class="hint">↓ Click to expand</p>
+          <div class="step-detail">
+            <strong>Bullish BOS:</strong> The last closed H1 candle closes <em>above</em> the high of two bars ago.<br/>
+            <strong>Bearish BOS:</strong> The last closed H1 candle closes <em>below</em> the low of two bars ago.<br/><br/>
+            This signals that market structure has shifted — institutions have broken a key level and price is likely to continue in that direction. Without BOS, no trade is armed.
+            <br/><br/>
+            <span class="tag tag-green">BULLISH: Close[1] &gt; High[2]</span>
+            <span class="tag tag-red">BEARISH: Close[1] &lt; Low[2]</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Liquidity Sweep</h3>
+          <p>Price must have swept equal lows (for longs) or equal highs (for shorts) before reversing — confirming institutional manipulation.</p>
+          <p class="hint">↓ Click to expand</p>
+          <div class="step-detail">
+            <strong>Sweep Low (Long):</strong> The M5 candle wicks below the prior candle's low, then closes back above it. This is a stop hunt — retail short orders below the low are triggered, providing liquidity for institutions to buy.<br/><br/>
+            <strong>Sweep High (Short):</strong> The M5 candle wicks above the prior candle's high, then closes back below it. Retail long stops are hunted, institutions sell into the liquidity.<br/><br/>
+            <span class="tag tag-green">SWEEP LOW: Low[1] &lt; Low[2] AND Close[1] &gt; Low[2]</span><br/>
+            <span class="tag tag-red">SWEEP HIGH: High[1] &gt; High[2] AND Close[1] &lt; High[2]</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Displacement / Strong Move</h3>
+          <p>A strong impulsive candle must confirm the institutional push — validating that this is a genuine move, not a slow grind.</p>
+          <p class="hint">↓ Click to expand</p>
+          <div class="step-detail">
+            The body of the most recent M5 candle must be <strong>at least 1.5× larger</strong> than the body of the candle before it.<br/><br/>
+            This filters out indecisive, low-conviction moves. When institutions enter the market, they do so decisively — the candle body size is the fingerprint of that conviction.<br/><br/>
+            <span class="tag tag-gold">Body[1] &gt; Body[2] × 1.5</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step" onclick="toggleStep(this)">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h3>Order Block Retest</h3>
+          <p>Price must return to the institutional Order Block zone — the last opposing candle before the displacement impulse.</p>
+          <p class="hint">↓ Click to expand</p>
+          <div class="step-detail">
+            <strong>Bullish OB:</strong> The last bearish M5 candle immediately before a strong bullish candle. This is where institutions placed their buy orders.<br/><br/>
+            <strong>Bearish OB:</strong> The last bullish M5 candle immediately before a strong bearish candle. This is where institutions placed their sell orders.<br/><br/>
+            The EA scans the last 10 candles to find this zone. The trade fires only when the current price (ask for buys, bid for sells) is <strong>inside</strong> the OB range. This is the entry trigger.
+            <br/><br/>
+            <span class="tag tag-green">LONG: Ask inside OB zone [OB Low → OB High]</span><br/>
+            <span class="tag tag-red">SHORT: Bid inside OB zone [OB Low → OB High]</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SVG Chart Demo -->
+    <div class="chart-demo reveal">
+      <h3>// Visual: Bullish Setup Flow</h3>
+      <svg class="chart" viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg">
+        <!-- Grid lines -->
+        <line x1="0" y1="50"  x2="900" y2="50"  stroke="#1a2535" stroke-width="1"/>
+        <line x1="0" y1="100" x2="900" y2="100" stroke="#1a2535" stroke-width="1"/>
+        <line x1="0" y1="150" x2="900" y2="150" stroke="#1a2535" stroke-width="1"/>
+        <line x1="0" y1="200" x2="900" y2="200" stroke="#1a2535" stroke-width="1"/>
+
+        <!-- Candles: uptrend -->
+        <rect x="40"  y="130" width="22" height="50" fill="#22c55e" opacity=".7"/>
+        <rect x="80"  y="110" width="22" height="60" fill="#22c55e" opacity=".7"/>
+        <rect x="120" y="90"  width="22" height="55" fill="#22c55e" opacity=".7"/>
+
+        <!-- BOS level line -->
+        <line x1="30" y1="90" x2="500" y2="90" stroke="#c9a84c" stroke-width="1.5" stroke-dasharray="6,4"/>
+        <text x="510" y="94" fill="#c9a84c" font-family="DM Mono,monospace" font-size="11">BOS Level</text>
+
+        <!-- Sweep Low candle (wick below, closes above) -->
+        <rect x="160" y="155" width="22" height="40" fill="#ef4444" opacity=".85"/>
+        <line x1="171" y1="155" x2="171" y2="130" stroke="#ef4444" stroke-width="2"/>
+        <line x1="171" y1="195" x2="171" y2="220" stroke="#ef4444" stroke-width="2"/>
+        <text x="148" y="240" fill="#ef4444" font-family="DM Mono,monospace" font-size="10">Sweep</text>
+
+        <!-- OB (bearish candle before impulse) - highlighted zone -->
+        <rect x="200" y="115" width="22" height="55" fill="#ef4444" opacity=".7"/>
+        <rect x="195" y="110" width="34" height="70" fill="#c9a84c" opacity=".08" rx="2"/>
+        <rect x="195" y="110" width="34" height="70" fill="none" stroke="#c9a84c" stroke-width="1.5" stroke-dasharray="4,3" rx="2"/>
+        <text x="182" y="240" fill="#c9a84c" font-family="DM Mono,monospace" font-size="10">OB Zone</text>
+
+        <!-- Strong bullish displacement -->
+        <rect x="240" y="70"  width="22" height="80" fill="#22c55e"/>
+        <line x1="251" y1="60" x2="251" y2="70"  stroke="#22c55e" stroke-width="2"/>
+        <line x1="251" y1="150" x2="251" y2="158" stroke="#22c55e" stroke-width="2"/>
+        <text x="225" y="240" fill="#22c55e" font-family="DM Mono,monospace" font-size="10">Impulse</text>
+
+        <!-- Continuation candles -->
+        <rect x="280" y="60"  width="22" height="50" fill="#22c55e" opacity=".7"/>
+        <rect x="320" y="50"  width="22" height="45" fill="#22c55e" opacity=".7"/>
+
+        <!-- Retest arrow -->
+        <path d="M 400 48 Q 440 20 480 48" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
+        <polygon points="478,42 488,52 472,54" fill="#c9a84c"/>
+
+        <!-- Retest into OB -->
+        <rect x="490" y="105" width="22" height="50" fill="#ef4444" opacity=".6"/>
+        <line x1="501" y1="95"  x2="501" y2="105" stroke="#ef4444" stroke-width="2"/>
+        <line x1="501" y1="155" x2="501" y2="165" stroke="#ef4444" stroke-width="2"/>
+
+        <!-- OB zone extended -->
+        <rect x="485" y="110" width="34" height="70" fill="#c9a84c" opacity=".08" rx="2"/>
+        <rect x="485" y="110" width="34" height="70" fill="none" stroke="#c9a84c" stroke-width="1.5" stroke-dasharray="4,3" rx="2"/>
+
+        <!-- Entry arrow -->
+        <line x1="530" y1="145" x2="570" y2="145" stroke="#22c55e" stroke-width="2"/>
+        <polygon points="568,139 580,145 568,151" fill="#22c55e"/>
+        <text x="584" y="149" fill="#22c55e" font-family="DM Mono,monospace" font-size="11">ENTRY</text>
+
+        <!-- SL line -->
+        <line x1="485" y1="182" x2="750" y2="182" stroke="#ef4444" stroke-width="1" stroke-dasharray="5,3"/>
+        <text x="755" y="186" fill="#ef4444" font-family="DM Mono,monospace" font-size="10">SL</text>
+
+        <!-- TP line -->
+        <line x1="530" y1="55" x2="750" y2="55" stroke="#22c55e" stroke-width="1" stroke-dasharray="5,3"/>
+        <text x="755" y="59" fill="#22c55e" font-family="DM Mono,monospace" font-size="10">TP</text>
+
+        <!-- Partial TP marker -->
+        <circle cx="640" cy="100" r="5" fill="#c9a84c"/>
+        <line x1="640" y1="100" x2="640" y2="55"  stroke="#c9a84c" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="608" y="96" fill="#c9a84c" font-family="DM Mono,monospace" font-size="10">50% close</text>
+
+        <!-- Post entry candles going up -->
+        <rect x="530" y="100" width="18" height="50" fill="#22c55e" opacity=".8"/>
+        <rect x="556" y="85"  width="18" height="52" fill="#22c55e" opacity=".8"/>
+        <rect x="582" y="72"  width="18" height="48" fill="#22c55e" opacity=".8"/>
+        <rect x="608" y="60"  width="18" height="44" fill="#22c55e" opacity=".8"/>
+        <rect x="634" y="50"  width="18" height="36" fill="#22c55e" opacity=".9"/>
+
+        <!-- Step labels -->
+        <text x="40"  y="16" fill="#64748b" font-family="DM Mono,monospace" font-size="10">① HTF Trend</text>
+        <text x="148" y="16" fill="#64748b" font-family="DM Mono,monospace" font-size="10">② Sweep</text>
+        <text x="225" y="16" fill="#64748b" font-family="DM Mono,monospace" font-size="10">③ Impulse</text>
+        <text x="470" y="16" fill="#64748b" font-family="DM Mono,monospace" font-size="10">④ OB Retest = Entry</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- EXIT LOGIC -->
+<section id="exit">
+  <div class="reveal">
+    <div class="section-label">03 — Exit System</div>
+    <h2 class="section-title">Exit <span>Logic</span></h2>
+
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-icon">✂️</div>
+        <h3>Stop Loss — OB Low/High + Buffer</h3>
+        <p>For longs: SL placed below the Order Block low with a configurable point buffer (default 10 points). For shorts: above OB high + buffer. This protects against minor wicks through the zone while keeping the stop tight and logical.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">💰</div>
+        <h3>Partial Close at 1R</h3>
+        <p>When price moves 1× the risk distance in profit (1R), 50% of the position is closed automatically. The stop loss is then moved to the entry price (breakeven). From this point, the trade is completely risk-free.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">📈</div>
+        <h3>Trailing Stop — Candle Low/High</h3>
+        <p>After entry, the stop loss trails to the prior candle's low (for longs) or high (for shorts) on every tick. This locks in profit as the move extends, letting winners run without a fixed ceiling beyond the initial TP.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h3>Full TP at 2R</h3>
+        <p>The remaining 50% of the position targets 2× the initial risk (2R). Combined with the partial close at 1R, the blended risk-reward is approximately 1.5R on winners — while trailing may capture more on strong moves.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- RISK -->
+<section id="risk">
+  <div class="reveal">
+    <div class="section-label">04 — Risk Management</div>
+    <h2 class="section-title">Capital <span>Protection</span></h2>
+
+    <div class="risk-grid">
+      <div class="risk-item">
+        <div class="risk-item-label">Risk Per Trade</div>
+        <div class="risk-item-val">1%</div>
+        <div class="risk-item-desc">Configurable. Lot size auto-calculated from balance × risk% ÷ SL distance each trade.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Breakeven Trigger</div>
+        <div class="risk-item-val">1R</div>
+        <div class="risk-item-desc">Stop moves to entry the moment price reaches 1× risk in profit. Cannot lose after this point.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Partial Close</div>
+        <div class="risk-item-val">50%</div>
+        <div class="risk-item-desc">Half the position secured at 1R. Remaining half runs to 2R target or trails further.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Max Spread Filter</div>
+        <div class="risk-item-val">30 pts</div>
+        <div class="risk-item-desc">No entry during high-spread periods (news, low liquidity). Configurable per instrument.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Max Concurrent Trades</div>
+        <div class="risk-item-val">1</div>
+        <div class="risk-item-desc">One trade per symbol at a time. Prevents compounding exposure from sequential signals.</div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-item-label">Blended R:R</div>
+        <div class="risk-item-val">~1.5R</div>
+        <div class="risk-item-desc">50% closed at 1R + 50% at 2R = 1.5R average on full winners. Trailing may exceed this.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- PARAMETERS -->
+<section id="params">
+  <div class="reveal">
+    <div class="section-label">05 — Configuration</div>
+    <h2 class="section-title">Input <span>Parameters</span></h2>
+
+    <table class="params-table">
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>HTF_TF</td>
+          <td>H1</td>
+          <td>Higher timeframe used for BOS bias detection. H4 for longer-term trades, H1 for intraday.</td>
+        </tr>
+        <tr>
+          <td>LTF_TF</td>
+          <td>M5</td>
+          <td>Lower timeframe for entry: OB detection, liquidity sweep, and displacement checks. M1 for scalping.</td>
+        </tr>
+        <tr>
+          <td>RiskPercent</td>
+          <td>1.0</td>
+          <td>Percentage of account balance risked per trade. Lot size adjusts automatically every trade.</td>
+        </tr>
+        <tr>
+          <td>RR</td>
+          <td>2.0</td>
+          <td>Full take profit target as a multiple of the stop loss distance. 2.0 = TP at 2× SL.</td>
+        </tr>
+        <tr>
+          <td>MaxTrades</td>
+          <td>1</td>
+          <td>Maximum number of EA-opened positions active at once. Only counts EA's own trades.</td>
+        </tr>
+        <tr>
+          <td>SL_Buffer</td>
+          <td>10</td>
+          <td>Additional points added below/above the OB for the stop loss. Absorbs minor wick extensions through the zone.</td>
+        </tr>
+        <tr>
+          <td>MaxSpread</td>
+          <td>30</td>
+          <td>Maximum spread in points before EA skips entry. Increase for exotic pairs, decrease for majors.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:40px;" class="cards">
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>Scalping Setup</h3>
+        <p>HTF: M15 → LTF: M1 · RR: 1.5 · MaxSpread: 15 · SL_Buffer: 5<br/><br/>Best for XAUUSD and indices during London/NY open sessions.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h3>Intraday Setup</h3>
+        <p>HTF: H1 → LTF: M5 · RR: 2.0 · MaxSpread: 30 · SL_Buffer: 10<br/><br/>Default configuration. Works across EURUSD, GBPUSD, XAUUSD.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏔️</div>
+        <h3>Swing Setup</h3>
+        <p>HTF: H4 → LTF: M15 · RR: 3.0 · MaxSpread: 40 · SL_Buffer: 20<br/><br/>Fewer trades, larger targets. Hold times of hours to a day.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- DISCLAIMER -->
+<section style="padding: 60px 24px;">
+  <div class="reveal" style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:32px;max-width:800px;margin:0 auto;">
+    <div class="section-label" style="margin-bottom:12px;">⚠️ Important Disclaimer</div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.85;font-weight:400;">
+      This Expert Advisor is provided for educational and research purposes. All automated trading carries significant financial risk.
+      Past performance in backtesting does not guarantee future live results. Always test thoroughly on a demo account before
+      deploying on a live account. Forex and CFD trading involves leverage and can result in losses exceeding your initial deposit.
+      Only trade with capital you can afford to lose. The creator assumes no liability for financial losses incurred through
+      the use of this software.
+    </p>
+  </div>
+</section>
+
+<footer>
+  SMC ICT Elite EA &nbsp;·&nbsp; MetaTrader 5 &nbsp;·&nbsp; Version 3.0
+  <br/><br/>
+  Built on Smart Money Concepts &amp; ICT Methodology
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(r => observer.observe(r));
+
+  // Step toggle
+  function toggleStep(el) {
+    const detail = el.querySelector('.step-detail');
+    const hint   = el.querySelector('.hint');
+    if(!detail) return;
+    detail.classList.toggle('open');
+    hint.textContent = detail.classList.contains('open') ? '↑ Click to collapse' : '↓ Click to expand';
+  }
+
+  // Smooth active nav highlight
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if(window.scrollY >= s.offsetTop - 120) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.style.color = a.getAttribute('href') === '#' + current ? 'var(--gold)' : '';
+    });
+  });
+</script>
+</body>
+</html>
